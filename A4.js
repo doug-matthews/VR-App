@@ -11,10 +11,12 @@ var controls;
 var effect;
 var camera;
 var spheres = [];
+var enimies = [];
 var sphere;
 var direction = null;
 // EnterVRButton for rendering enter/exit UI.
 var vrButton;
+var borgCubeMaterial;
 
 
 
@@ -56,12 +58,29 @@ function onLoad() {
     'cube5.png', 'cube6.png'
     ] );
 
+    // Create Sky Box
+    var borgCubemap = new THREE.CubeTextureLoader()
+    .setPath( 'img/borgCubeMap/' )
+    .load( [
+    'borg.png', 'borg.png',
+    'borg.png', 'borg.png',
+    'borg.png', 'borg.png'
+    ] );
+
     var skyboxMaterial = new THREE.ShaderMaterial({
             uniforms: {
             skybox: { type: "t", value: skyboxCubemap },
         },
         side: THREE.DoubleSide
     });
+
+
+    borgCubeMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+        skybox: { type: "t", value: borgCubemap },
+    },
+    side: THREE.DoubleSide
+});
 
     // -------------------------------
     // LOADING SHADERS
@@ -73,6 +92,8 @@ function onLoad() {
     new THREE.SourceLoader().load(shaderFiles, function(shaders) {
         skyboxMaterial.vertexShader = shaders['glsl/skybox.vs.glsl']	
         skyboxMaterial.fragmentShader = shaders['glsl/skybox.fs.glsl']
+        borgCubeMaterial.vertexShader = shaders['glsl/skybox.vs.glsl']	
+        borgCubeMaterial.fragmentShader = shaders['glsl/skybox.fs.glsl']
     })
 
 
@@ -162,7 +183,8 @@ function onClick (event) {
     direction = lookAtVector;
    
     var geometry = new THREE.SphereGeometry(0.1, 0.1, 5);
-    var material = new THREE.MeshNormalMaterial();
+    var material = new THREE.MeshBasicMaterial( { color: 0xFF0000, transparent: false} );
+    
     sphere = new THREE.Mesh(geometry, material);
 
     // // Position cube mesh to be right in front of you.
@@ -173,35 +195,22 @@ function onClick (event) {
     spheres.push([sphere, lookAtVector, count])
 
     scene.add(sphere);
+
+    createEnemy();
 }
 
+
+var enemyTimer = 0;
 
 // Request animation frame loop function
 function animate(timestamp) {
     var delta = Math.min(timestamp - lastRenderTime, 500);
     lastRenderTime = timestamp;
 
-    // Apply rotation to cube mesh
-    cube.rotation.y += delta * 0.0006;
+    updateWepons();
 
-    //   if(sphere!= null){
-    //     sphere.translateOnAxis(direction, 0.001);
-    //   }
-
-    var removeCount = 0;
-
-    for (let i=0; i < spheres.length; i++){
-        spheres[i][2] = spheres[i][2]+1;
-
-        if(spheres[i][2]>200){
-            scene.remove(spheres[i][0]);
-            removeCount++;
-        }
-        spheres[i][0].translateOnAxis(spheres[i][1], 0.001);
-    }
-
-    spheres.splice(0, removeCount);
-
+    updateEnimies(delta);
+    
     // Only update controls if we're presenting.
     if (vrButton.isPresenting()) {
         controls.update();
@@ -210,6 +219,90 @@ function animate(timestamp) {
     effect.render(scene, camera);
 
     vrDisplay.requestAnimationFrame(animate);
+}
+
+
+function updateWepons(){
+    var removeCount = 0;
+    
+    for (let i=0; i < spheres.length; i++){
+        // update how long the sphere has exisited
+        spheres[i][2] = spheres[i][2]+1;
+
+        // remove sphere if it has been around for too long
+        if(spheres[i][2]>200){
+            scene.remove(spheres[i][0]);
+            removeCount++;
+        }
+
+        // Move sphere away from viewer
+        spheres[i][0].translateOnAxis(spheres[i][1], 0.001);
+    }
+
+    // Remove old spheres
+    spheres.splice(0, removeCount);
+    
+}
+
+function updateEnimies(delta){
+    var removeCount = 0;
+    
+    for (let i=0; i < enimies.length; i++){
+        // update how long the sphere has exisited
+        enimies[i][2] = enimies[i][2]+1;
+
+        // remove sphere if it has been around for too long
+        // if(enimies[i][2]>200){
+        //     scene.remove(enimies[i][0]);
+        //     removeCount++;
+        // }
+
+        var enemy = enimies[i][0];
+        for (let i=0; i < spheres.length; i++){
+            
+            var sphere = spheres[i][0];
+            
+            
+            var offset = new THREE.Vector3(0,controls.userHeight,0);
+            if(sphere.position.distanceTo( offset.add(enemy.position)) < .5){
+                scene.remove(enemy);
+                scene.remove(sphere);
+            }
+        }
+
+
+        // Apply rotation to cube mesh
+        enimies[i][0].rotation.y += delta * 0.0006;
+
+        // Move sphere away from viewer
+        //enimies[i][0].translateOnAxis(enimies[i][1], 0.00001);
+    }
+
+    // Remove old spheres
+    enimies.splice(0, removeCount);
+}
+
+function createEnemy(){
+
+    // Create New Random Position
+    var angle = Math.random()*2*Math.PI;
+
+
+    var geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+    var material = new THREE.MeshNormalMaterial();
+    cube = new THREE.Mesh(geometry, borgCubeMaterial);
+
+
+    // // Position cube mesh to be right in front of you.
+    cube.position.set(3*Math.sin(angle), controls.userHeight+2*Math.random()-1, 3*Math.cos(angle));
+    
+    var count =0;
+
+    var attackDirection = -1*(cube.position - camera.position);
+
+    enimies.push([cube, attackDirection, count])
+
+    scene.add(cube);
 }
 
 function onResize(e) {
