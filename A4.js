@@ -51,11 +51,11 @@ function onLoad() {
 
     // Create Sky Box
     var skyboxCubemap = new THREE.CubeTextureLoader()
-    .setPath( 'img/cubemap/' )
+    .setPath( 'img/starBox/' )
     .load( [
-    'cube1.png', 'cube2.png',
-    'cube3.png', 'cube4.png',
-    'cube5.png', 'cube6.png'
+    'stars.png', 'stars.png',
+    'stars.png', 'stars.png',
+    'stars.png', 'stars.png'
     ] );
 
     // Create Sky Box
