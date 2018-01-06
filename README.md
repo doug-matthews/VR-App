@@ -1,4 +1,8 @@
-# WebVR Boilerplate
+#Star Trek Inspired VR Game
+
+This project was devleoped as part of my Computer Graphics course at UBC (CPSC 314). The basis of this game is to destroy the Borg cubes that appear. Note this game was devloped to work with an iPhone 7 and may not function properly on other devices. This game was based on the WebVR boiler plate (See notes below).
+
+#WebVR Boilerplate
 
 A [THREE.js][three]-based starting point for cross-platform web-based VR
 experiences.
@@ -13,10 +17,3 @@ for a [live demo][demo].
 [ui]: https://github.com/googlevr/webvr-ui
 [spec]: https://w3c.github.io/webvr/
 [demo]: https://borismus.github.io/webvr-boilerplate/
-
-## Getting started
-
-The easiest way to start is to fork or clone this repository. The boilerplate is
-also available via npm. Easy install:
-
-    npm install webvr-boilerplate
